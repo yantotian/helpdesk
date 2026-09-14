@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
+import type { ImgHTMLAttributes } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
-import { getIDRequests, updateIDRequestStatus, updateIDRequestPayment } from '@/lib/api';
+import { getIDRequests, updateIDRequestStatus, updateIDRequestPayment, getSignedStorageUrl } from '@/lib/api';
 import type { IDRequest } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,8 +56,9 @@ function exportCSV(rows: IDRequest[]) {
   a.click(); URL.revokeObjectURL(url);
 }
 
-async function downloadImage(url: string, filename: string) {
+async function downloadImage(bucket: string, path: string, filename: string) {
   try {
+    const url = await getSignedStorageUrl(bucket, path);
     const res = await fetch(url);
     const blob = await res.blob();
     const objUrl = URL.createObjectURL(blob);
@@ -64,6 +66,17 @@ async function downloadImage(url: string, filename: string) {
     a.href = objUrl; a.download = filename; a.click();
     URL.revokeObjectURL(objUrl);
   } catch { toast.error('Download failed'); }
+}
+
+function SignedImg({ bucket, ref, ...props }: { bucket: string; ref: string } & ImgHTMLAttributes<HTMLImageElement>) {
+  const [src, setSrc] = useState('');
+  useEffect(() => {
+    if (!ref) return;
+    let cancelled = false;
+    getSignedStorageUrl(bucket, ref).then(u => { if (!cancelled) setSrc(u); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [bucket, ref]);
+  return src ? <img src={src} {...props} /> : null;
 }
 
 export default function IDRequestsAdminPage() {
@@ -292,28 +305,28 @@ export default function IDRequestsAdminPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="mono text-[10px] text-muted-foreground tracking-widest">ID PHOTO</span>
                       {viewing.photo_url && (
-                        <Button size="sm" variant="ghost" onClick={() => downloadImage(viewing.photo_url!, `${viewing.id_number}-photo.png`)}
+                        <Button size="sm" variant="ghost" onClick={() => downloadImage('id-photos', viewing.photo_url!, `${viewing.id_number}-photo.png`)}
                           className="h-6 px-2 border border-border text-[10px]">
                           <Download className="w-3 h-3 mr-1" /> Download
                         </Button>
                       )}
                     </div>
                     {viewing.photo_url
-                      ? <img src={viewing.photo_url} alt="ID Photo" className="h-28 border border-border object-contain bg-muted w-full" />
+                      ? <SignedImg bucket="id-photos" ref={viewing.photo_url} alt="ID Photo" className="h-28 border border-border object-contain bg-muted w-full" />
                       : <span className="text-xs text-muted-foreground">Not provided</span>}
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="mono text-[10px] text-muted-foreground tracking-widest">SIGNATURE</span>
                       {viewing.signature_url && (
-                        <Button size="sm" variant="ghost" onClick={() => downloadImage(viewing.signature_url!, `${viewing.id_number}-signature.png`)}
+                        <Button size="sm" variant="ghost" onClick={() => downloadImage('id-signatures', viewing.signature_url!, `${viewing.id_number}-signature.png`)}
                           className="h-6 px-2 border border-border text-[10px]">
                           <Download className="w-3 h-3 mr-1" /> Download
                         </Button>
                       )}
                     </div>
                     {viewing.signature_url
-                      ? <img src={viewing.signature_url} alt="Signature" className="h-16 border border-border bg-white p-1 object-contain w-full" />
+                      ? <SignedImg bucket="id-signatures" ref={viewing.signature_url} alt="Signature" className="h-16 border border-border bg-white p-1 object-contain w-full" />
                       : <span className="text-xs text-muted-foreground">Not provided</span>}
                   </div>
                 </div>

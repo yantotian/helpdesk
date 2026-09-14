@@ -1,11 +1,12 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import type { ImgHTMLAttributes } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Upload, Camera, RotateCcw, CheckCircle, X, Clock, XCircle, CreditCard, FileText } from 'lucide-react';
-import { submitIDRequest, getMyIDRequests } from '@/lib/api';
+import { submitIDRequest, getMyIDRequests, getSignedStorageUrl } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { IDRequest } from '@/types/types';
 
@@ -175,6 +176,17 @@ function MediaSection({
   );
 }
 
+function SignedImg({ bucket, ref, ...props }: { bucket: string; ref: string } & ImgHTMLAttributes<HTMLImageElement>) {
+  const [src, setSrc] = useState('');
+  useEffect(() => {
+    if (!ref) return;
+    let cancelled = false;
+    getSignedStorageUrl(bucket, ref).then(u => { if (!cancelled) setSrc(u); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [bucket, ref]);
+  return src ? <img src={src} {...props} /> : null;
+}
+
 // My Requests Tab
 function MyRequestsTab() {
   const [requests, setRequests] = useState<IDRequest[]>([]);
@@ -231,13 +243,13 @@ function MyRequestsTab() {
                 {r.photo_url && (
                   <div>
                     <span className="mono text-[10px] text-muted-foreground tracking-widest block mb-1">ID PHOTO</span>
-                    <img src={r.photo_url} alt="ID Photo" className="h-20 border border-border object-contain bg-muted" />
+                    <SignedImg bucket="id-photos" ref={r.photo_url} alt="ID Photo" className="h-20 border border-border object-contain bg-muted" />
                   </div>
                 )}
                 {r.signature_url && (
                   <div>
                     <span className="mono text-[10px] text-muted-foreground tracking-widest block mb-1">SIGNATURE</span>
-                    <img src={r.signature_url} alt="Signature" className="h-12 border border-border bg-white p-1 object-contain" />
+                    <SignedImg bucket="id-signatures" ref={r.signature_url} alt="Signature" className="h-12 border border-border bg-white p-1 object-contain" />
                   </div>
                 )}
               </div>

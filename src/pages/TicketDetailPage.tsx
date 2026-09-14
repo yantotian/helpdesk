@@ -5,7 +5,7 @@ import MainLayout from '@/components/layouts/MainLayout';
 import { StatusBadge, PriorityBadge, SLAIndicator } from '@/components/common/Badges';
 import {
   getTicket, getActivities, getAttachments, addComment,
-  updateTicketStatus, assignTicket, getProfiles, updateTicket, uploadAttachment, deleteTicket
+  updateTicketStatus, assignTicket, getProfiles, updateTicket, uploadAttachment, deleteTicket, getSignedStorageUrl
 } from '@/lib/api';
 import { supabase } from '@/db/supabase';
 import { exportTicketToPdf } from '@/lib/pdfExport';
@@ -31,6 +31,21 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
   attachment: <Paperclip className="w-3 h-3" />,
   system: <Clock className="w-3 h-3" />,
 };
+
+function AttachmentLink({ path }: { path: string }) {
+  const [href, setHref] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    getSignedStorageUrl('ticket-attachments', path).then(u => { if (!cancelled) setHref(u); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [path]);
+  if (!href) return <Download className="w-3 h-3 text-muted-foreground" />;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary shrink-0">
+      <Download className="w-3 h-3" />
+    </a>
+  );
+}
 
 // Allowed transitions per role
 function getAllowedTransitions(status: TicketStatus, role: string | null): TicketStatus[] {
@@ -419,14 +434,7 @@ export default function TicketDetailPage() {
                 {attachments.map(att => (
                   <div key={att.id} className="flex items-center justify-between gap-2 bg-secondary px-2 py-1.5 border border-border/50">
                     <span className="mono text-[10px] text-foreground truncate">{att.file_name}</span>
-                    <a
-                      href={`https://tzdwisdgsxlwbehdkslx.supabase.co/storage/v1/object/public/ticket-attachments/${att.file_path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary shrink-0"
-                    >
-                      <Download className="w-3 h-3" />
-                    </a>
+                    <AttachmentLink path={att.file_path} />
                   </div>
                 ))}
                 {attachments.length === 0 && (

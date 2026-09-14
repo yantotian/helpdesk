@@ -94,8 +94,25 @@ async function uploadIDFile(bucket: string, userId: string, file: File): Promise
   const safeName = `${userId}/${Date.now()}_${toHex(stem)}${ext}`;
   const { data, error } = await supabase.storage.from(bucket).upload(safeName, file, { contentType: file.type, upsert: true });
   if (error) throw error;
-  const { data: url } = supabase.storage.from(bucket).getPublicUrl(data.path);
-  return url.publicUrl;
+  return data.path;
+}
+
+export function getStoragePathFromRef(bucketOrRef: string, ref?: string): string {
+  const value = ref ?? bucketOrRef;
+  if (!value.startsWith('http')) return value;
+  const marker = `/object/`;
+  const idx = value.indexOf(marker);
+  if (idx === -1) return value;
+  const rest = value.slice(idx + marker.length);
+  const slashIdx = rest.indexOf('/');
+  return slashIdx === -1 ? rest : rest.slice(slashIdx + 1);
+}
+
+export async function getSignedStorageUrl(bucket: string, ref: string): Promise<string> {
+  const path = getStoragePathFromRef(bucket, ref);
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+  if (error || !data?.signedUrl) throw error ?? new Error('Failed to create signed URL');
+  return data.signedUrl;
 }
 
 async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
@@ -604,9 +621,8 @@ export async function uploadAttachment(ticketId: string, uploaderId: string, fil
   });
 }
 
-export function getAttachmentUrl(path: string): string {
-  const { data } = supabase.storage.from('ticket-attachments').getPublicUrl(path);
-  return data.publicUrl;
+export async function getAttachmentUrl(path: string): Promise<string> {
+  return getSignedStorageUrl('ticket-attachments', path);
 }
 
 // ──────────────────────────────────────────────
