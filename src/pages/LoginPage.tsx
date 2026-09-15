@@ -227,7 +227,7 @@ export default function LoginPage() {
                     <Input
                       value={form.office}
                       onChange={(e) => set("office", e.target.value)}
-                      placeholder="e.g. HQ Floor 3"
+                      placeholder="e.g. City Information Office"
                       className="bg-input border-border mono text-sm"
                     />
                   </div>
