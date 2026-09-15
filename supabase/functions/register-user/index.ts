@@ -12,14 +12,15 @@ Deno.serve(async (req) => {
 
   try {
     const { username: rawUsername, password, full_name, role, office, contact } = await req.json();
-    const username = rawUsername.toLowerCase();
 
-    if (!username || !password) {
+    if (!rawUsername || !password) {
       return new Response(
         JSON.stringify({ error: "username and password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const username = rawUsername.toLowerCase();
 
     // Validate username (letters, digits, underscore only)
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
