@@ -4,6 +4,7 @@ import { getAllProfiles, toggleProfileActive } from '@/lib/api';
 import { supabase } from '@/db/supabase';
 import type { Profile, UserRole } from '@/types/types';
 import { Button } from '@/components/ui/button';
+import { formatUtc8DateStamp } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -88,7 +89,7 @@ function exportToCSV(profiles: Profile[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `users_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `users_${formatUtc8DateStamp(new Date())}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

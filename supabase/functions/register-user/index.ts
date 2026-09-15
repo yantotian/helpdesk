@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     const allowedRoles = ["requester", "technician", "it_admin", "sysadmin"];
     const assignedRole = allowedRoles.includes(role) ? role : "requester";
-    const email = `${username}@miaoda.com`;
+    const email = `${username}@ciodesk.com`;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,

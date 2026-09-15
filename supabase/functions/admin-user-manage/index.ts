@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
         patch.username = username;
         // Keep the synthetic email in sync
         const { error: emailErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-          email: `${username}@miaoda.com`,
+          email: `${username}@ciodesk.com`,
         });
         if (emailErr) return json({ error: emailErr.message }, 400);
       }

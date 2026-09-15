@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid,
 } from 'recharts';
+import { formatUtc8Date, formatUtc8ShortDate, formatUtc8DateTime, formatUtc8DateStamp } from '@/lib/utils';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const DEVICE_TABS: { key: DeviceType | 'internet'; label: string; icon: React.ReactNode }[] = [
@@ -65,7 +66,7 @@ function exportDevicesCSV(devices: ICTDevice[], type: string) {
   ].map(escape).join(','))];
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `ict-${type}-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  a.download = `ict-${type}-${formatUtc8DateStamp(new Date())}.csv`; a.click();
 }
 
 function exportInternetCSV(rows: ICTInternet[]) {
@@ -82,7 +83,7 @@ function exportInternetCSV(rows: ICTInternet[]) {
   ].map(escape).join(','))];
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `ict-internet-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  a.download = `ict-internet-${formatUtc8DateStamp(new Date())}.csv`; a.click();
 }
 
 // ── Device Form ───────────────────────────────────────────────────────────────
@@ -428,7 +429,7 @@ function SpeedTestPanel({ connection, isAdmin }: { connection: ICTInternet; isAd
   };
 
   const chartData = logs.map(l => ({
-    date: new Date(l.tested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: formatUtc8ShortDate(l.tested_at),
     dl: l.dl_mbps,
     ul: l.ul_mbps ?? undefined,
     latency: l.latency_ms ?? undefined,
@@ -514,7 +515,7 @@ function SpeedTestPanel({ connection, isAdmin }: { connection: ICTInternet; isAd
                   <tbody>
                     {[...logs].reverse().map(l => (
                       <tr key={l.id} className="border-b border-border/30 last:border-0 hover:bg-muted/10">
-                        <td className="px-3 py-1.5 mono">{new Date(l.tested_at).toLocaleString()}</td>
+                        <td className="px-3 py-1.5 mono">{formatUtc8DateTime(l.tested_at)}</td>
                         <td className="px-3 py-1.5 font-semibold text-primary">{l.dl_mbps}</td>
                         <td className="px-3 py-1.5">{l.ul_mbps ?? '—'}</td>
                         <td className="px-3 py-1.5">{l.latency_ms != null ? `${l.latency_ms} ms` : '—'}</td>
@@ -685,7 +686,7 @@ function DeviceTicketsPanel({ device, isAdmin }: { device: ICTDevice; isAdmin: b
                       </td>
                       <td className="px-3 py-1.5 mono text-[10px]">{(l.ticket?.priority ?? '—').toUpperCase()}</td>
                       <td className="px-3 py-1.5 text-muted-foreground max-w-[160px] truncate">{l.note ?? '—'}</td>
-                      <td className="px-3 py-1.5 mono">{new Date(l.created_at).toLocaleDateString()}</td>
+                      <td className="px-3 py-1.5 mono">{formatUtc8Date(l.created_at)}</td>
                       {isAdmin && (
                         <td className="px-3 py-1.5">
                           <button onClick={() => setDeleteId(l.id)} className="text-destructive hover:text-destructive/80">

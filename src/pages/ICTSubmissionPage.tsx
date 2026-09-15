@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { createInventorySubmission, getMySubmissions } from '@/lib/api';
 import type { ICTInventorySubmission } from '@/types/types';
 import { Plus, ClipboardList, Monitor, Wifi, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { formatUtc8Date } from '@/lib/utils';
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -348,7 +349,7 @@ function SubmissionRow({ s }: { s: ICTInventorySubmission }) {
               {isDevice ? `${s.brand ?? '—'} ${s.model ?? '—'}` : `${s.isp_name ?? '—'} — ${s.plan_name ?? '—'}`}
             </div>
             <div className="text-xs text-muted-foreground mono">
-              {isDevice ? (s.device_type ?? '').toUpperCase() : 'INTERNET'} · {new Date(s.created_at).toLocaleDateString()}
+              {isDevice ? (s.device_type ?? '').toUpperCase() : 'INTERNET'} · {formatUtc8Date(s.created_at)}
             </div>
           </div>
         </div>

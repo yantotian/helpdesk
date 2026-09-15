@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { getAllSubmissions, reviewInventorySubmission } from '@/lib/api';
 import type { ICTInventorySubmission } from '@/types/types';
 import { RefreshCw, CheckCircle, XCircle, Monitor, Wifi, ChevronDown, ChevronUp, FileDown } from 'lucide-react';
+import { formatUtc8Date, formatUtc8DateTime, formatUtc8DateStamp } from '@/lib/utils';
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -89,7 +90,7 @@ function exportSubmissionsCSV(subs: ICTInventorySubmission[]) {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `ict-submissions-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `ict-submissions-${formatUtc8DateStamp(new Date())}.csv`;
   a.click();
 }
 
@@ -210,7 +211,7 @@ export default function ICTSubmissionsReviewPage() {
                             </div>
                             <div className="text-xs text-muted-foreground mono">
                               Submitted by <span className="text-foreground">{s.submitter?.full_name ?? s.submitter?.username ?? 'Unknown'}</span>
-                              {' · '}{new Date(s.created_at).toLocaleDateString()}
+                              {' · '}{formatUtc8Date(s.created_at)}
                               {' · '}{isDevice ? (s.device_type ?? '').toUpperCase() : 'INTERNET'}
                             </div>
                           </div>
@@ -249,7 +250,7 @@ export default function ICTSubmissionsReviewPage() {
                           )}
                           {s.reviewed_at && (
                             <div className="text-xs text-muted-foreground">
-                              Reviewed {new Date(s.reviewed_at).toLocaleString()}
+                              Reviewed {formatUtc8DateTime(s.reviewed_at)}
                               {s.reviewer && ` by ${s.reviewer.full_name ?? s.reviewer.username}`}
                             </div>
                           )}

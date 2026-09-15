@@ -12,6 +12,7 @@ import {
   PieChart, Pie, Cell, Legend,
   LineChart, Line, CartesianGrid,
 } from 'recharts';
+import { formatUtc8Date, formatUtc8ShortDate, formatUtc8DateTime, formatUtc8DateStamp } from '@/lib/utils';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const COLORS = ['hsl(18 85% 40%)','hsl(18 85% 60%)','hsl(18 65% 30%)','hsl(30 50% 55%)','hsl(200 60% 45%)'];
@@ -57,10 +58,10 @@ function exportFullReport(devices: ICTDevice[], internet: ICTInternet[]) {
   ].map(escapeCSV).join(','));
 
   downloadCSV([
-    `ICT INVENTORY REPORT — Generated ${new Date().toLocaleString()}`,
+    `ICT INVENTORY REPORT — Generated ${formatUtc8DateTime(new Date())}`,
     '', '# DEVICES', devHeaders.join(','), ...devRows,
     '', '# INTERNET CONNECTIONS', netHeaders.join(','), ...netRows,
-  ].join('\n'), `ict-full-report-${new Date().toISOString().slice(0,10)}.csv`);
+  ].join('\n'), `ict-full-report-${formatUtc8DateStamp(new Date())}.csv`);
 }
 
 // ── Export speed logs CSV ─────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ function exportSpeedLogsCSV(logs: SpeedLogRow[]) {
     l.dl_mbps, l.ul_mbps ?? '', l.latency_ms ?? '', l.notes ?? '',
   ].map(escapeCSV).join(','));
   downloadCSV([headers.join(','), ...rows].join('\n'),
-    `speed-test-logs-${new Date().toISOString().slice(0,10)}.csv`);
+    `speed-test-logs-${formatUtc8DateStamp(new Date())}.csv`);
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
@@ -201,7 +202,7 @@ export default function ICTDashboardPage() {
   const globalTrendData = useMemo(() => {
     const byDate: Record<string, { total: number; count: number }> = {};
     filteredSpeedLogs.forEach(l => {
-      const d = new Date(l.tested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const d = formatUtc8ShortDate(l.tested_at);
       if (!byDate[d]) byDate[d] = { total: 0, count: 0 };
       byDate[d].total += l.dl_mbps;
       byDate[d].count += 1;
@@ -519,7 +520,7 @@ export default function ICTDashboardPage() {
                                   <td className="px-3 py-1.5 font-semibold text-primary">{latest.dl_mbps}</td>
                                   <td className="px-3 py-1.5">{latest.ul_mbps ?? '—'}</td>
                                   <td className="px-3 py-1.5">{latest.latency_ms != null ? `${latest.latency_ms} ms` : '—'}</td>
-                                  <td className="px-3 py-1.5 mono">{new Date(latest.tested_at).toLocaleDateString()}</td>
+                                  <td className="px-3 py-1.5 mono">{formatUtc8Date(latest.tested_at)}</td>
                                 </tr>
                               );
                             })}
@@ -535,7 +536,7 @@ export default function ICTDashboardPage() {
                       {Object.entries(byConnection).map(([, logs]) => {
                         const conn = logs[0].internet;
                         const chartData = logs.map(l => ({
-                          date: new Date(l.tested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                          date: formatUtc8ShortDate(l.tested_at),
                           dl: l.dl_mbps,
                           ul: l.ul_mbps ?? undefined,
                         }));

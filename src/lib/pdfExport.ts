@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { formatUtc8Stamp, formatUtc8DateStamp } from './utils';
 
 /** Capture a DOM element as a canvas and render it into a PDF page. */
 async function elementToPdf(element: HTMLElement, pdf: jsPDF, yOffset = 0) {
@@ -79,7 +80,7 @@ function addFooter(pdf: jsPDF) {
     pdf.setTextColor(107, 114, 128);
     pdf.text('IT HELPDESK SYSTEM · CONFIDENTIAL', 10, pageH - 4);
     pdf.text(`PAGE ${i} / ${pageCount}`, pageW - 10, pageH - 4, { align: 'right' });
-    pdf.text(`GENERATED: ${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC`, pageW / 2, pageH - 4, { align: 'center' });
+    pdf.text(`GENERATED: ${formatUtc8Stamp(new Date())} +08:00`, pageW / 2, pageH - 4, { align: 'center' });
   }
 }
 
@@ -116,7 +117,7 @@ export async function exportTicketToPdf(ticketNumber: string, element: HTMLEleme
     element,
     `ticket-${ticketNumber}`,
     `Ticket: ${ticketNumber}`,
-    `Exported ${new Date().toISOString().slice(0, 10)}`,
+    `Exported ${formatUtc8DateStamp(new Date())}`,
   );
 }
 
@@ -126,8 +127,8 @@ export async function exportTicketToPdf(ticketNumber: string, element: HTMLEleme
 export async function exportReportsToPdf(element: HTMLElement, period?: string) {
   return exportElementToPdf(
     element,
-    `helpdesk-report-${new Date().toISOString().slice(0, 10)}`,
+    `helpdesk-report-${formatUtc8DateStamp(new Date())}`,
     'IT Helpdesk Reports',
-    period ?? new Date().toISOString().slice(0, 10),
+    period ?? formatUtc8DateStamp(new Date()),
   );
 }

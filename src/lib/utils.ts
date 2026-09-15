@@ -1,8 +1,51 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+export const APP_TIME_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function toUtc8(date: Date | string | number): Date {
+  return new Date(new Date(date).getTime() + APP_TIME_ZONE_OFFSET_MS);
+}
+
+export function formatUtc8(
+  date: Date | string | number,
+  opts: Intl.DateTimeFormatOptions = {}
+): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", ...opts }).format(
+    toUtc8(date)
+  );
+}
+
+export function formatUtc8Stamp(date: Date | string | number, length = 19): string {
+  return toUtc8(date).toISOString().slice(0, length).replace("T", " ");
+}
+
+export function formatUtc8DateStamp(date: Date | string | number): string {
+  return toUtc8(date).toISOString().slice(0, 10);
+}
+
+export function formatUtc8Date(date: Date | string | number): string {
+  return formatUtc8(date, { year: "numeric", month: "numeric", day: "numeric" });
+}
+
+export function formatUtc8ShortDate(date: Date | string | number): string {
+  return formatUtc8(date, { month: "short", day: "numeric" });
+}
+
+export function formatUtc8DateTime(date: Date | string | number): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  }).format(toUtc8(date));
 }
 
 export type Params = Partial<

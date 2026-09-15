@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { RefreshCw, Eye, CheckCircle, XCircle, Clock, Search, Download, CreditCard, FileDown } from 'lucide-react';
+import { formatUtc8Date, formatUtc8DateStamp } from '@/lib/utils';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -43,7 +44,7 @@ function exportCSV(rows: IDRequest[]) {
   const lines = [
     headers.join(','),
     ...rows.map(r => [
-      new Date(r.created_at).toLocaleDateString(),
+      formatUtc8Date(r.created_at),
       r.full_name, r.nickname ?? '', r.id_number, r.office_name, r.position, r.address,
       r.emergency_name, r.emergency_contact, r.emergency_address,
       r.status, r.is_paid ? 'Yes' : 'No', r.notes ?? '',
@@ -52,7 +53,7 @@ function exportCSV(rows: IDRequest[]) {
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `id-requests-${new Date().toISOString().slice(0,10)}.csv`;
+  a.href = url; a.download = `id-requests-${formatUtc8DateStamp(new Date())}.csv`;
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -225,7 +226,7 @@ export default function IDRequestsAdminPage() {
               <tbody>
                 {filtered.map(r => (
                   <tr key={r.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatUtc8Date(r.created_at)}</td>
                     <td className="px-4 py-2.5 font-medium">{r.full_name}</td>
                     <td className="px-4 py-2.5 mono text-xs">{r.id_number}</td>
                     <td className="px-4 py-2.5 text-xs">{r.office_name}</td>

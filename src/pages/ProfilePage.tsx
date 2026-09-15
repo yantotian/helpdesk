@@ -54,7 +54,7 @@ export default function ProfilePage() {
     setSavingPwd(true);
     try {
       // Re-authenticate first
-      const email = `${profile?.username}@miaoda.com`;
+      const email = `${profile?.username}@ciodesk.com`;
       const { error: signInErr } = await supabase.auth.signInWithPassword({
         email,
         password: pwd.current,

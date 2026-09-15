@@ -9,6 +9,7 @@ import { Upload, Camera, RotateCcw, CheckCircle, X, Clock, XCircle, CreditCard, 
 import { submitIDRequest, getMyIDRequests, getSignedStorageUrl } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { IDRequest } from '@/types/types';
+import { formatUtc8Date } from '@/lib/utils';
 
 interface EmergencyContact { name: string; contact: string; address: string; }
 interface IDForm {
@@ -222,7 +223,7 @@ function MyRequestsTab() {
           </div>
           <div className="px-5 py-4 space-y-3 text-sm">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
-              {([['Office', r.office_name], ['Address', r.address], ['Submitted', new Date(r.created_at).toLocaleDateString()]] as [string,string][]).map(([l,v]) => (
+              {([['Office', r.office_name], ['Address', r.address], ['Submitted', formatUtc8Date(r.created_at)]] as [string,string][]).map(([l,v]) => (
                 <div key={l}><span className="text-xs text-muted-foreground block">{l}</span><span className="font-medium">{v}</span></div>
               ))}
             </div>

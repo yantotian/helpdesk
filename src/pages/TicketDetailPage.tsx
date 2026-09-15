@@ -22,6 +22,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { formatUtc8Stamp } from '@/lib/utils';
 
 const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
   comment: <MessageSquare className="w-3 h-3" />,
@@ -325,7 +326,7 @@ export default function TicketDetailPage() {
                           {a.actor?.full_name || a.actor?.username || 'System'}
                         </span>
                         <span className="mono text-[10px] text-muted-foreground">
-                          {new Date(a.created_at).toISOString().slice(0, 16).replace('T', ' ')}
+                          {formatUtc8Stamp(a.created_at, 16)}
                         </span>
                       </div>
                       <p className="text-xs text-foreground mt-0.5 break-words">{a.content}</p>

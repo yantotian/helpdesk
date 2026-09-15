@@ -8,6 +8,7 @@ import { TicketStatus, TicketPriority } from '@/types/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { PlusCircle, AlertTriangle, Clock, CheckCircle, Ticket, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatUtc8Stamp } from '@/lib/utils';
 
 const STATUS_ORDER: TicketStatus[] = ['new', 'assigned', 'in_progress', 'resolved', 'on_hold', 'verified', 'closed'];
 // Colors are referenced via CSS variables so they adapt to light/dark mode.
@@ -129,7 +130,7 @@ export default function DashboardPage() {
               WELCOME, <span className="text-primary">{(profile?.full_name || profile?.username || '').toUpperCase()}</span>
             </h1>
             <p className="text-muted-foreground text-xs mono mt-1">
-              {new Date().toISOString().slice(0, 19).replace('T', ' ')} UTC
+              {formatUtc8Stamp(new Date())} +08:00
             </p>
           </div>
           {(role === 'requester' || role === 'it_admin' || role === 'sysadmin') && (
@@ -251,7 +252,7 @@ export default function DashboardPage() {
               {recent.map((a: any) => (
                 <div key={a.id} className="flex items-start gap-3 text-xs border-b border-border/30 pb-2">
                   <span className="mono text-muted-foreground shrink-0 mt-0.5">
-                    {new Date(a.created_at).toISOString().slice(11, 16)}
+                    {formatUtc8Stamp(a.created_at, 5)}
                   </span>
                   <span className="text-foreground min-w-0">
                     <span className="text-primary">{a.actor?.full_name || a.actor?.username || 'System'}</span>

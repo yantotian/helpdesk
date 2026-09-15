@@ -9,6 +9,13 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const ALERT_EMAIL = Deno.env.get("SLA_ALERT_EMAIL") ?? "";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://app.helpdesk.internal";
 
+const APP_TIME_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+function formatUtc8(d: string | Date): string {
+  return new Date(new Date(d).getTime() + APP_TIME_ZONE_OFFSET_MS)
+    .toISOString().replace("T", " ").slice(0, 19) + " +08:00";
+}
+
 async function sendEmail(to: string[], subject: string, html: string) {
   if (!RESEND_API_KEY) {
     console.warn("RESEND_API_KEY not configured — skipping email");
@@ -39,7 +46,7 @@ function buildAlertHtml(tickets: any[]): string {
       <td style="padding:8px 12px;font-family:monospace;color:#FF4500;font-weight:bold;">${t.ticket_number}</td>
       <td style="padding:8px 12px;font-family:monospace;color:#e5e7eb;">${t.subject}</td>
       <td style="padding:8px 12px;font-family:monospace;color:${t.priority === 'critical' ? '#FF4500' : '#f59e0b'};text-transform:uppercase;">${t.priority}</td>
-      <td style="padding:8px 12px;font-family:monospace;color:#9ca3af;">${t.sla_due_at ? new Date(t.sla_due_at).toUTCString() : 'N/A'}</td>
+      <td style="padding:8px 12px;font-family:monospace;color:#9ca3af;">${t.sla_due_at ? formatUtc8(t.sla_due_at) : 'N/A'}</td>
       <td style="padding:8px 12px;">
         <a href="${APP_URL}/tickets/${t.id}" style="color:#FF4500;font-family:monospace;text-decoration:none;">VIEW →</a>
       </td>
@@ -131,7 +138,7 @@ Deno.serve(async (req) => {
       ticket_id: ticket.id,
       actor_id: null,
       activity_type: "system",
-      content: `⚠ SLA BREACH: ${ticket.priority.toUpperCase()} ticket overdue since ${new Date(ticket.sla_due_at).toUTCString()}`,
+      content: `⚠ SLA BREACH: ${ticket.priority.toUpperCase()} ticket overdue since ${formatUtc8(ticket.sla_due_at)}`,
     });
     console.log(`SLA BREACH: ${ticket.ticket_number} [${ticket.priority}]`);
   }
