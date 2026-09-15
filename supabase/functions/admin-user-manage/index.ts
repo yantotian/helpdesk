@@ -39,7 +39,8 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, user_id, username, password, full_name, role, office, contact } = body;
+    const { action, user_id, username: rawUsername, password, full_name, role, office, contact } = body;
+    const username = typeof rawUsername === 'string' ? rawUsername.toLowerCase() : rawUsername;
 
     // ── UPDATE username / password ──────────────────────────────────
     if (action === "update") {
@@ -67,6 +68,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (conflict) return json({ error: "Username already taken" }, 409);
         patch.username = username;
+        patch.email = `${username}@ciodesk.com`;
         // Keep the synthetic email in sync
         const { error: emailErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
           email: `${username}@ciodesk.com`,

@@ -174,7 +174,7 @@ export default function UsersPage() {
     try {
       const patch: Record<string, unknown> = {
         action: 'update', user_id: editTarget.id,
-        username: editForm.username.trim() || undefined,
+        username: editForm.username.trim().toLowerCase() || undefined,
         full_name: editForm.full_name.trim() || undefined,
         role: editForm.role,
         office: editForm.office.trim() || undefined,
@@ -195,11 +195,12 @@ export default function UsersPage() {
     if (addForm.password !== addForm.confirmPw) { toast.error('Passwords do not match'); return; }
     setSaving('new');
     try {
+      const username = addForm.username.trim().toLowerCase();
       const { data, error } = await supabase.functions.invoke('register-user', {
         body: {
-          username: addForm.username.trim(),
+          username,
           password: addForm.password,
-          full_name: addForm.full_name.trim() || addForm.username.trim(),
+          full_name: addForm.full_name.trim() || username,
           role: addForm.role,
           office: addForm.office.trim() || undefined,
           contact: addForm.contact.trim() || undefined,
@@ -243,7 +244,7 @@ export default function UsersPage() {
     setCsvImporting(true);
     let success = 0, failed = 0;
     for (const row of rows) {
-      const username = (row['username'] || '').trim();
+      const username = (row['username'] || '').trim().toLowerCase();
       const password = (row['password'] || '').trim();
       if (!username || !password) { failed++; continue; }
       try {

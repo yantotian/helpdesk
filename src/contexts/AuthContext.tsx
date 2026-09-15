@@ -67,9 +67,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithUsername = async (username: string, password: string) => {
     try {
-      const email = `${username}@ciodesk.com`;
+      const email = `${username.toLowerCase()}@ciodesk.com`;
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('is_active')
+          .eq('id', session.user.id)
+          .single();
+        if (profileData && !profileData.is_active) {
+          await supabase.auth.signOut();
+          throw new Error('Account is deactivated. Contact your administrator.');
+        }
+      }
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -86,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const msg = await error?.context?.text?.();
         throw new Error(msg || error.message);
       }
-      const email = `${payload.username}@ciodesk.com`;
+      const email = `${payload.username.toLowerCase()}@ciodesk.com`;
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: payload.password,
