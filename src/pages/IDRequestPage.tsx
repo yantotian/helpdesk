@@ -49,6 +49,8 @@ const EMPTY_FORM: IDForm = {
   emergency: { name: "", contact: "", address: "" },
 };
 
+const MAX_MEDIA_BYTES = 2 * 1024 * 1024;
+
 const STATUS_STYLES: Record<string, string> = {
   pending: "border-yellow-500 text-yellow-600",
   approved: "border-green-500 text-green-600",
@@ -543,6 +545,10 @@ export default function IDRequestPage() {
       toast.error("Please upload an image file");
       return;
     }
+    if (file.size > MAX_MEDIA_BYTES) {
+      toast.error("ID photo exceeds 2MB limit");
+      return;
+    }
     setPhotoFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setPhotoDataUrl(ev.target?.result as string);
@@ -553,15 +559,24 @@ export default function IDRequestPage() {
     setPhotoDataUrl(url);
     fetch(url)
       .then((r) => r.blob())
-      .then((blob) =>
-        setPhotoFile(new File([blob], "photo.png", { type: "image/png" })),
-      );
+      .then((blob) => {
+        if (blob.size > MAX_MEDIA_BYTES) {
+          setPhotoDataUrl(null);
+          toast.error("Captured photo exceeds 2MB limit");
+          return;
+        }
+        setPhotoFile(new File([blob], "photo.png", { type: "image/png" }));
+      });
   };
   const handleSigFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
+      return;
+    }
+    if (file.size > MAX_MEDIA_BYTES) {
+      toast.error("Signature exceeds 2MB limit");
       return;
     }
     const reader = new FileReader();
@@ -867,7 +882,10 @@ export default function IDRequestPage() {
                       ID PHOTO
                     </span>
                   </div>
-                  <div className="p-5">
+                  <div className="p-5 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      ID photo must not exceed 2MB.
+                    </p>
                     <MediaSection
                       label="Upload or Capture Photo"
                       preview={photoDataUrl}
@@ -890,7 +908,10 @@ export default function IDRequestPage() {
                       SIGNATURE <span className="text-destructive ml-1">*</span>
                     </span>
                   </div>
-                  <div className="p-5">
+                  <div className="p-5 space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Signature must not exceed 2MB.
+                    </p>
                     <MediaSection
                       label="Draw, upload, or capture your signature"
                       required
