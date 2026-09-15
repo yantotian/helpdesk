@@ -174,7 +174,7 @@ export default function ProfilePage() {
                   value={pwd.current}
                   onChange={e => setPwd(p => ({ ...p, current: e.target.value }))}
                   placeholder="••••••••"
-                  autoComplete="current-password"
+                  autoComplete={showPwd ? 'off' : 'current-password'}
                   className="bg-input border-border mono text-sm pr-10"
                 />
               </div>
@@ -187,7 +187,7 @@ export default function ProfilePage() {
                 value={pwd.next}
                 onChange={e => setPwd(p => ({ ...p, next: e.target.value }))}
                 placeholder="••••••••"
-                autoComplete="new-password"
+                autoComplete={showPwd ? 'off' : 'new-password'}
                 className="bg-input border-border mono text-sm"
               />
             </div>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                 value={pwd.confirm}
                 onChange={e => setPwd(p => ({ ...p, confirm: e.target.value }))}
                 placeholder="••••••••"
-                autoComplete="new-password"
+                autoComplete={showPwd ? 'off' : 'new-password'}
                 className="bg-input border-border mono text-sm"
               />
             </div>
