@@ -86,9 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const msg = await error?.context?.text?.();
         throw new Error(msg || error.message);
       }
-      if (data?.session) {
-        await supabase.auth.setSession(data.session);
-      }
+      const email = `${payload.username}@ciodesk.com`;
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: payload.password,
+      });
+      if (signInError) throw signInError;
       return { error: null };
     } catch (error) {
       return { error: error as Error };

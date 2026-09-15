@@ -73,22 +73,8 @@ Deno.serve(async (req) => {
         .eq("id", data.user.id);
     }
 
-    // Sign in to get session
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!
-    );
-    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    if (signInError) {
-      return new Response(
-        JSON.stringify({ error: signInError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     return new Response(
-      JSON.stringify({ session: signInData.session, user: data.user }),
+      JSON.stringify({ user: data.user }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

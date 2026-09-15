@@ -58,8 +58,8 @@ export default function LoginPage() {
           toast.error(error.message);
           return;
         }
-        toast.success("Account created. Please log in.");
-        setMode("login");
+        toast.success("Account created");
+        navigate("/dashboard");
       }
     } finally {
       setLoading(false);
