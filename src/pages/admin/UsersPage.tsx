@@ -309,6 +309,8 @@ export default function UsersPage() {
             placeholder="Search by username or name…"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            autoComplete="off"
+            name="user-search"
             className="pl-9 h-9 text-sm"
           />
         </div>
@@ -383,11 +385,13 @@ export default function UsersPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Username</Label>
                 <Input value={editForm.username} onChange={e => setEditForm(f => ({ ...f, username: e.target.value }))}
+                  autoComplete="off" name="edit-username"
                   className="h-9 text-sm" placeholder="username" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Full Name</Label>
                 <Input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+                  autoComplete="off" name="edit-fullname"
                   className="h-9 text-sm" placeholder="Full name" />
               </div>
             </div>
@@ -396,6 +400,7 @@ export default function UsersPage() {
               <div className="relative">
                 <Input type={showPw ? 'text' : 'password'} value={editForm.password}
                   onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))}
+                  autoComplete="new-password" name="edit-password"
                   className="h-9 text-sm pr-10" placeholder="New password" />
                 <button type="button" onClick={() => setShowPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -417,12 +422,14 @@ export default function UsersPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Office</Label>
                 <Input value={editForm.office} onChange={e => setEditForm(f => ({ ...f, office: e.target.value }))}
+                  autoComplete="off" name="edit-office"
                   className="h-9 text-sm" placeholder="Office / dept." />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Contact</Label>
               <Input value={editForm.contact} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))}
+                autoComplete="off" name="edit-contact"
                 className="h-9 text-sm" placeholder="Phone / ext." />
             </div>
           </div>
@@ -446,11 +453,13 @@ export default function UsersPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Username <span className="text-destructive">*</span></Label>
                 <Input value={addForm.username} onChange={e => setAddForm(f => ({ ...f, username: e.target.value }))}
+                  autoComplete="off" name="add-username"
                   className="h-9 text-sm" placeholder="e.g. john_doe" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Full Name</Label>
                 <Input value={addForm.full_name} onChange={e => setAddForm(f => ({ ...f, full_name: e.target.value }))}
+                  autoComplete="off" name="add-fullname"
                   className="h-9 text-sm" placeholder="John Doe" />
               </div>
             </div>
@@ -460,6 +469,7 @@ export default function UsersPage() {
                 <div className="relative">
                   <Input type={showAddPw ? 'text' : 'password'} value={addForm.password}
                     onChange={e => setAddForm(f => ({ ...f, password: e.target.value }))}
+                    autoComplete="new-password" name="add-password"
                     className="h-9 text-sm pr-10" placeholder="Min 6 characters" />
                   <button type="button" onClick={() => setShowAddPw(v => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -472,6 +482,7 @@ export default function UsersPage() {
                 <Label className="text-xs font-semibold">Confirm Password <span className="text-destructive">*</span></Label>
                 <Input type="password" value={addForm.confirmPw}
                   onChange={e => setAddForm(f => ({ ...f, confirmPw: e.target.value }))}
+                  autoComplete="off" name="add-confirm"
                   className="h-9 text-sm" placeholder="Repeat password" />
                 {addForm.confirmPw && addForm.password !== addForm.confirmPw && (
                   <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
@@ -491,12 +502,14 @@ export default function UsersPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Office</Label>
                 <Input value={addForm.office} onChange={e => setAddForm(f => ({ ...f, office: e.target.value }))}
+                  autoComplete="off" name="add-office"
                   className="h-9 text-sm" placeholder="Office / dept." />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Contact</Label>
               <Input value={addForm.contact} onChange={e => setAddForm(f => ({ ...f, contact: e.target.value }))}
+                autoComplete="off" name="add-contact"
                 className="h-9 text-sm" placeholder="Phone / ext." />
             </div>
           </div>
