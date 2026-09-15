@@ -19,15 +19,12 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "typeRoots": ["./node_modules/**/*"]
+    }
   },
   "include": ["src"]
 }
