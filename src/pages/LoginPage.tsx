@@ -223,14 +223,6 @@ if (mode === "register" && !agreed) {
                 <>
                   <div className="space-y-1">
                     <Label className="mono text-xs text-muted-foreground">
-                      ROLE
-                    </Label>
-                    <div className="w-full bg-input border border-border px-3 py-2 mono text-sm text-muted-foreground select-none">
-                      Requester
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="mono text-xs text-muted-foreground">
                       OFFICE (optional)
                     </Label>
                     <Input
