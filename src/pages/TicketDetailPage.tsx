@@ -190,6 +190,19 @@ export default function TicketDetailPage() {
   const canComment = !!ticket && ticket.status !== 'closed';
   const canDelete = role === 'sysadmin';
 
+  const timelinePartner = (a: TicketActivity): string | null => {
+    if (!ticket) return null;
+    const requesterName = ticket.requester?.full_name || ticket.requester?.username || null;
+    const assigneeName = ticket.assignee?.full_name || ticket.assignee?.username || null;
+    if (a.activity_type === 'assignment') return assigneeName;
+    if (a.activity_type === 'comment' || a.activity_type === 'status_change') {
+      if (!a.actor_id) return requesterName;
+      if (a.actor_id === ticket.requester_id) return assigneeName;
+      return requesterName;
+    }
+    return null;
+  };
+
   const handleDelete = async () => {
     if (!ticket) return;
     setDeleting(true);
@@ -325,6 +338,12 @@ export default function TicketDetailPage() {
                         <span className="mono text-[10px] text-primary">
                           {a.actor?.full_name || a.actor?.username || 'System'}
                         </span>
+                        {timelinePartner(a) && (
+                          <>
+                            <ArrowRight className="w-2.5 h-2.5 text-muted-foreground" />
+                            <span className="mono text-[10px] text-muted-foreground">{timelinePartner(a)}</span>
+                          </>
+                        )}
                         <span className="mono text-[10px] text-muted-foreground">
                           {formatUtc8Stamp(a.created_at, 16)}
                         </span>

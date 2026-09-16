@@ -65,7 +65,7 @@ export interface Ticket {
 export interface TicketActivity {
   id: string;
   ticket_id: string;
-  actor_id: string;
+  actor_id: string | null;
   activity_type: 'comment' | 'status_change' | 'assignment' | 'resolution' | 'attachment' | 'system';
   content: string | null;
   old_value: string | null;
