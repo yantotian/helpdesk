@@ -89,10 +89,10 @@ Deno.serve(async (req) => {
       .update({ assigned_to: assignedTech.id, status: "assigned", updated_at: new Date().toISOString() })
       .eq("id", ticket_id);
 
-    // Log activity
+    // Log activity (System-generated event, no human actor)
     await supabase.from("ticket_activities").insert({
       ticket_id,
-      actor_id: assignedTech.id,
+      actor_id: null,
       activity_type: "assignment",
       content: `Auto-assigned to ${assignedTech.full_name || assignedTech.username}`,
       new_value: assignedTech.id,
