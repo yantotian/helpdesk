@@ -35,7 +35,7 @@ const EMPTY_EDIT: EditForm = { username: '', full_name: '', role: 'requester', o
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
   if (!pw) return { score: 0, label: '', color: '' };
   let score = 0;
-  if (pw.length >= 8) score++;
+  if (pw.length >= 6) score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;

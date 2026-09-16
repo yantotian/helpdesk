@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
 
     const username = rawUsername.toLowerCase();
 
+    // Validate password minimum length
+    if (password.length < 6) {
+      return new Response(
+        JSON.stringify({ error: "Password must be at least 6 characters" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Validate username (letters, digits, underscore only)
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return new Response(

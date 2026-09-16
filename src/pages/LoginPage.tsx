@@ -28,11 +28,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "register" && !agreed) {
-      toast.error("Please accept the User Agreement and Privacy Policy");
-      return;
-    }
-    setLoading(true);
+if (mode === "register" && !agreed) {
+        toast.error("Please accept the User Agreement and Privacy Policy");
+        return;
+      }
+      if (mode === "register" && form.password.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        return;
+      }
+      setLoading(true);
     try {
       if (mode === "login") {
         const { error } = await signInWithUsername(
@@ -187,10 +191,15 @@ export default function LoginPage() {
                 <div className="relative">
                   <Input
                     required
+                    minLength={6}
                     type={showPwd ? "text" : "password"}
                     value={form.password}
                     onChange={(e) => set("password", e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={
+                      mode === "register"
+                        ? "Min 6 chars: letters, numbers, symbols"
+                        : "••••••••"
+                    }
                     className="bg-input border-border mono text-sm pr-10"
                     autoComplete={
                       mode === "login" ? "current-password" : "new-password"

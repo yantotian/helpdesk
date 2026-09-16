@@ -43,8 +43,8 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pwd.next || pwd.next.length < 8) {
-      toast.error('New password must be at least 8 characters');
+    if (!pwd.next || pwd.next.length < 6) {
+      toast.error('New password must be at least 6 characters');
       return;
     }
     if (pwd.next !== pwd.confirm) {
@@ -180,7 +180,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="mono text-[10px] text-muted-foreground">NEW PASSWORD (min 8 chars)</Label>
+              <Label className="mono text-[10px] text-muted-foreground">NEW PASSWORD (min 6 chars)</Label>
               <Input
                 required
                 type={showPwd ? 'text' : 'password'}
