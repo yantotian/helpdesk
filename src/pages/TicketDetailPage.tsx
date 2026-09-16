@@ -286,8 +286,8 @@ export default function TicketDetailPage() {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 {[
                   ['Requester', ticket.requester?.full_name || ticket.requester?.username || '—'],
-                  ['Office', ticket.office || '—'],
-                  ['Contact', ticket.contact || '—'],
+                  ['Office', ticket.requester?.office || ticket.office || '—'],
+                  ['Contact', ticket.requester?.contact || ticket.contact || '—'],
                   ['Location', ticket.location || '—'],
                   ['Category', ticket.category?.name || '—'],
                   ['Subcategory', ticket.subcategory?.name || '—'],
