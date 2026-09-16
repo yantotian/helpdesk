@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ALLOWED_ROLES = new Set(["requester", "technician", "it_admin", "sysadmin"]);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -30,14 +32,31 @@ Deno.serve(async (req) => {
       );
     }
 
-    const allowedRoles = ["requester", "technician", "it_admin", "sysadmin"];
-    const assignedRole = allowedRoles.includes(role) ? role : "requester";
-    const email = `${username}@ciodesk.com`;
-
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Resolve caller. Public self-registration can NEVER escalate privileges:
+    // only an authenticated System Admin may create privileged accounts.
+    let callerIsSysadmin = false;
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const callerToken = authHeader.replace("Bearer ", "");
+    if (callerToken) {
+      const { data: { user: caller }, error: authErr } = await supabaseAdmin.auth.getUser(callerToken);
+      if (!authErr && caller) {
+        const { data: callerProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("role")
+          .eq("id", caller.id)
+          .maybeSingle();
+        callerIsSysadmin = callerProfile?.role === "sysadmin";
+      }
+    }
+
+    const requestedRole = ALLOWED_ROLES.has(role) ? role : "requester";
+    const assignedRole = callerIsSysadmin ? requestedRole : "requester";
+    const email = `${username}@ciodesk.com`;
 
     // Check username availability
     const { data: existing } = await supabaseAdmin
@@ -76,7 +95,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ user: data.user }),
+      JSON.stringify({ user: data.user, role: assignedRole }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

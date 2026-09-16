@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ALLOWED_ROLES = new Set(["requester", "technician", "it_admin", "sysadmin"]);
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -42,9 +44,39 @@ Deno.serve(async (req) => {
     const { action, user_id, username: rawUsername, password, full_name, role, office, contact } = body;
     const username = typeof rawUsername === 'string' ? rawUsername.toLowerCase() : rawUsername;
 
-    // ── UPDATE username / password ──────────────────────────────────
+    // ── UPDATE username / password / profile ─────────────────────
     if (action === "update") {
       if (!user_id) return json({ error: "user_id required" }, 400);
+
+      // Only allow known roles
+      if (role !== undefined && (typeof role !== "string" || !ALLOWED_ROLES.has(role))) {
+        return json({ error: "Invalid role. Use: requester | technician | it_admin | sysadmin" }, 400);
+      }
+
+      // Fetch the target profile for guards + audit logging
+      const { data: target, error: targetErr } = await supabaseAdmin
+        .from("profiles")
+        .select("id, role, is_active")
+        .eq("id", user_id)
+        .maybeSingle();
+      if (targetErr || !target) return json({ error: "User not found" }, 404);
+
+      // Guards around role changes
+      if (role !== undefined && role !== target.role) {
+        if (user_id === caller.id) {
+          return json({ error: "You cannot change your own role" }, 400);
+        }
+        if (target.role === "sysadmin") {
+          const { count } = await supabaseAdmin
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("role", "sysadmin")
+            .eq("is_active", true);
+          if ((count ?? 0) < 2) {
+            return json({ error: "Cannot demote the last active System Admin" }, 400);
+          }
+        }
+      }
 
       // Update password if provided
       if (password) {
@@ -83,6 +115,18 @@ Deno.serve(async (req) => {
       if (Object.keys(patch).length > 0) {
         const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", user_id);
         if (error) return json({ error: error.message }, 400);
+      }
+
+      // Audit role changes
+      if (role !== undefined && role !== target.role) {
+        await supabaseAdmin.from("audit_log").insert({
+          actor_id: caller.id,
+          table_name: "profiles",
+          record_id: user_id,
+          action: "role_update",
+          old_data: { role: target.role },
+          new_data: { role },
+        });
       }
 
       return json({ success: true });

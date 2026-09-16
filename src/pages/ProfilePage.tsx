@@ -78,7 +78,7 @@ export default function ProfilePage() {
     requester: 'REQUESTER',
     technician: 'TECHNICIAN',
     it_admin: 'IT ADMIN',
-    sysadmin: 'SYSADMIN',
+    sysadmin: 'SYSTEM ADMIN',
   };
 
   return (

@@ -45,7 +45,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'ADMINISTRATION',
     items: [
-      { to: '/admin/users', label: 'USERS', icon: <Users className="w-4 h-4" />, roles: ['it_admin', 'sysadmin'] },
+      { to: '/admin/users', label: 'USERS', icon: <Users className="w-4 h-4" />, roles: ['sysadmin'] },
       { to: '/admin/categories', label: 'CATEGORIES', icon: <FolderTree className="w-4 h-4" />, roles: ['it_admin', 'sysadmin'] },
       { to: '/admin/priorities', label: 'PRIORITIES', icon: <SlidersHorizontal className="w-4 h-4" />, roles: ['it_admin', 'sysadmin'] },
       { to: '/admin/config', label: 'SYSTEM CONFIG', icon: <Settings className="w-4 h-4" />, roles: ['it_admin', 'sysadmin'] },
@@ -62,7 +62,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   requester: 'REQUESTER',
   technician: 'TECHNICIAN',
   it_admin: 'IT ADMIN',
-  sysadmin: 'SYSADMIN',
+  sysadmin: 'SYSTEM ADMIN',
 };
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {

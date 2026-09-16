@@ -3,6 +3,8 @@ import MainLayout from '@/components/layouts/MainLayout';
 import { getAllProfiles, toggleProfileActive } from '@/lib/api';
 import { supabase } from '@/db/supabase';
 import type { Profile, UserRole } from '@/types/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, isSysAdmin } from '@/lib/roles';
 import { Button } from '@/components/ui/button';
 import { formatUtc8DateStamp } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -16,12 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { RefreshCw, Search, UserCheck, UserX, Pencil, Trash2, UserPlus, Eye, EyeOff, Download, Upload } from 'lucide-react';
-
-const ROLES: UserRole[] = ['requester', 'technician', 'it_admin', 'sysadmin'];
-const ROLE_LABELS: Record<UserRole, string> = {
-  requester: 'Requester', technician: 'Technician', it_admin: 'IT Admin', sysadmin: 'SysAdmin',
-};
+import { RefreshCw, Search, UserCheck, UserX, Pencil, Trash2, UserPlus, Eye, EyeOff, Download, Upload, ShieldCheck } from 'lucide-react';
 
 interface EditForm {
   username: string;
@@ -113,6 +110,8 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export default function UsersPage() {
+  const { role, profile: currentProfile } = useAuth();
+
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -138,9 +137,26 @@ export default function UsersPage() {
 
   const reload = async () => {
     setLoading(true);
-    getAllProfiles().then(setProfiles).finally(() => setLoading(false));
+    getAllProfiles().then(setProfiles).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { reload(); }, []);
+
+  // ── Guard: user & role management is System Admin only ──────────
+  if (!isSysAdmin(role)) {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <div className="border border-border bg-card p-10 text-center">
+            <div className="laser-line mb-4 w-20 mx-auto" />
+            <h1 className="text-lg font-bold text-foreground">Access Restricted</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
+              Only System Administrators can manage registered users and their roles.
+            </p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const filtered = profiles.filter(p =>
     !search ||
@@ -159,6 +175,22 @@ export default function UsersPage() {
     setSaving(null);
   };
 
+  // ── Change role (inline dropdown) ──────────────────────────────
+  const handleRoleChange = async (user: Profile, nextRole: UserRole) => {
+    if (nextRole === user.role) return;
+    if (user.id === currentProfile?.id) {
+      toast.error('You cannot change your own role.');
+      return;
+    }
+    setSaving(user.id);
+    try {
+      await callManage({ action: 'update', user_id: user.id, role: nextRole });
+      setProfiles(p => p.map(u => u.id === user.id ? { ...u, role: nextRole } : u));
+      toast.success(`Role updated to ${ROLE_LABELS[nextRole]}`);
+    } catch (e: any) { toast.error(e.message); }
+    setSaving(null);
+  };
+
   // ── Open edit dialog ───────────────────────────────────────────
   const openEdit = (u: Profile) => {
     setEditTarget(u);
@@ -170,6 +202,10 @@ export default function UsersPage() {
   // ── Save edit ──────────────────────────────────────────────────
   const handleEditSave = async () => {
     if (!editTarget) return;
+    if (editTarget.id === currentProfile?.id && editForm.role !== editTarget.role) {
+      toast.error('You cannot change your own role.');
+      return;
+    }
     setSaving(editTarget.id);
     try {
       const patch: Record<string, unknown> = {
@@ -296,6 +332,27 @@ export default function UsersPage() {
           </div>
         </div>
 
+        {/* Role Guide */}
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {ROLES.map(r => (
+            <div key={r} className="border border-border bg-card p-4 rounded-sm">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{ROLE_LABELS[r]}</h3>
+                {r === 'sysadmin' && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">{ROLE_DESCRIPTIONS[r].summary}</p>
+              <ul className="space-y-1">
+                {ROLE_DESCRIPTIONS[r].capabilities.map((c, i) => (
+                  <li key={i} className="text-[11px] text-foreground/80 flex gap-1.5">
+                    <span className="text-primary">—</span>
+                    <span>{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
         {/* CSV format hint */}
         <p className="text-xs text-muted-foreground">
           CSV import columns: <span className="font-mono">username, password, full_name, role, office, contact</span>
@@ -336,11 +393,20 @@ export default function UsersPage() {
                     <td className="px-3 py-2.5 whitespace-nowrap text-sm font-medium text-primary">{u.username}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-sm text-foreground">{u.full_name || '—'}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-sm text-muted-foreground">{u.office || '—'}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className="inline-block text-xs font-medium px-2 py-0.5 rounded border border-border bg-secondary text-secondary-foreground">
-                        {ROLE_LABELS[u.role]}
-                      </span>
-                    </td>
+<td className="px-3 py-2.5 whitespace-nowrap">
+  <Select
+    value={u.role}
+    onValueChange={v => handleRoleChange(u, v as UserRole)}
+    disabled={saving === u.id || u.id === currentProfile?.id}
+  >
+    <SelectTrigger className="h-7 text-xs w-36 border-border" title={u.id === currentProfile?.id ? "You cannot change your own role" : 'Change role'}>
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      {ROLES.map(r => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
+    </SelectContent>
+  </Select>
+</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
                         u.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'
