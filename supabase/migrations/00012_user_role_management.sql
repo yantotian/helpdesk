@@ -7,9 +7,20 @@
 --      that also protects against demoting the last active System Admin.
 -- Edge functions (service_role) remain the primary management path and are
 -- unaffected by RLS.
+--
+-- NOTE: helper functions (is_admin / is_sysadmin / get_user_role) were moved
+-- to the `private` schema by migration 00010, so policies must call them as
+-- private.* — `public.*` no longer resolves.
 -- ============================================================================
 
 begin;
+
+-- Defensive cleanup in case a partial application created the helper in public.
+drop function if exists public.set_user_role(uuid, public.user_role);
+
+-- Self-contained: helpers live in `private`, so ensure USAGE is available.
+grant usage on schema private to authenticated;
+grant usage on schema private to service_role;
 
 -- ── 1. Replace the broad "Admin full access to profiles" policy ──────────────
 -- Old policy let any it_admin/sysadmin update any column including role.
@@ -20,22 +31,23 @@ drop policy if exists "Admin full access to profiles" on public.profiles;
 create policy "Admin manage profiles (except role changes)"
   on public.profiles
   for all to authenticated
-  using (public.is_admin(auth.uid()))
+  using (private.is_admin(auth.uid()))
   with check (
-    public.is_sysadmin(auth.uid())
-    or role is not distinct from public.get_user_role(id)
+    private.is_sysadmin(auth.uid())
+    or role is not distinct from private.get_user_role(id)
   );
 
 create policy "SysAdmin full access to profiles"
   on public.profiles
   for all to authenticated
-  using (public.is_sysadmin(auth.uid()))
-  with check (public.is_sysadmin(auth.uid()));
+  using (private.is_sysadmin(auth.uid()))
+  with check (private.is_sysadmin(auth.uid()));
 
 -- ── 2. SECURITY DEFINER helper: role change entry point ──────────────────────
 -- Only a System Admin caller may invoke this. Prevents demoting the last
--- active System Admin.
-create or replace function public.set_user_role(uid uuid, new_role public.user_role)
+-- active System Admin. Lives in `private` (not PostgREST-exposed) per the
+-- migration 00010 convention for SECURITY DEFINER helpers.
+create or replace function private.set_user_role(uid uuid, new_role public.user_role)
 returns public.user_role language plpgsql security definer set search_path = '' as $$
 declare
   caller_role public.user_role;
@@ -62,7 +74,7 @@ begin
 end;
 $$;
 
-revoke all on function public.set_user_role(uuid, public.user_role) from public, anon;
-grant execute on function public.set_user_role(uuid, public.user_role) to authenticated;
+revoke all on function private.set_user_role(uuid, public.user_role) from public, anon;
+grant execute on function private.set_user_role(uuid, public.user_role) to authenticated;
 
 commit;
