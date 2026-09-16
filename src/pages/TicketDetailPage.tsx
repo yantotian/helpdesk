@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layouts/MainLayout';
@@ -92,7 +92,6 @@ export default function TicketDetailPage() {
   const [exportingPdf, setExportingPdf] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const pdfRef = useRef<HTMLDivElement>(null);
 
   const reload = useCallback(async () => {
     if (!id) return;
@@ -173,10 +172,10 @@ export default function TicketDetailPage() {
   };
 
   const handleExportPdf = async () => {
-    if (!pdfRef.current || !ticket) return;
+    if (!ticket) return;
     setExportingPdf(true);
     try {
-      await exportTicketToPdf(ticket.ticket_number, pdfRef.current);
+      await exportTicketToPdf({ ticket, activities, attachments });
       toast.success('PDF exported');
     } catch (e: any) {
       toast.error('PDF export failed: ' + e.message);
@@ -275,8 +274,6 @@ export default function TicketDetailPage() {
           </div>
         </div>
 
-        {/* PDF capture region */}
-        <div ref={pdfRef}>
         <div className="grid md:grid-cols-3 gap-5">
           {/* Main Column */}
           <div className="md:col-span-2 space-y-5">
@@ -492,7 +489,6 @@ export default function TicketDetailPage() {
             </div>
           </div>
         </div>
-        </div>{/* end pdfRef */}
       </div>
 
       {/* Delete confirm */}

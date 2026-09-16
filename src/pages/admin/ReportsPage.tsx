@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getTickets, getIDRequestCount } from '@/lib/api';
 import { exportReportsToPdf } from '@/lib/pdfExport';
@@ -27,7 +27,6 @@ export default function ReportsPage() {
   const [dateTo, setDateTo] = useState('');
   const [exportingPdf, setExportingPdf] = useState(false);
   const [idRequestCount, setIdRequestCount] = useState(0);
-  const pdfRef = useRef<HTMLDivElement>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -77,11 +76,10 @@ export default function ReportsPage() {
     : 100;
 
   const handleExportPdf = async () => {
-    if (!pdfRef.current) return;
     setExportingPdf(true);
     try {
       const period = dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : dateFrom || dateTo || undefined;
-      await exportReportsToPdf(pdfRef.current, period);
+      await exportReportsToPdf({ tickets, idRequestCount, period });
       toast.success('PDF report exported');
     } catch (e: any) {
       toast.error('PDF export failed: ' + e.message);
@@ -142,9 +140,6 @@ export default function ReportsPage() {
             </Button>
           </div>
         </div>
-
-        {/* PDF capture region */}
-        <div ref={pdfRef}>
 
         {/* KPI Row */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -223,7 +218,6 @@ export default function ReportsPage() {
             </div>
           </div>
         </div>
-        </div>{/* end pdfRef */}
       </div>
     </MainLayout>
   );
