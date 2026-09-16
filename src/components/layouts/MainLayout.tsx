@@ -28,7 +28,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'GENERAL',
     items: [
       { to: '/dashboard', label: 'DASHBOARD', icon: <LayoutDashboard className="w-4 h-4" />, roles: ['requester', 'technician', 'it_admin', 'sysadmin'] },
-      { to: '/tickets', label: 'TICKETS', icon: <Ticket className="w-4 h-4" />, roles: ['technician', 'it_admin', 'sysadmin'] },
+      { to: '/tickets', label: 'TICKETS', icon: <Ticket className="w-4 h-4" />, roles: ['requester', 'technician', 'it_admin', 'sysadmin'] },
       { to: '/tickets/new', label: 'NEW TICKET', icon: <ClipboardList className="w-4 h-4" />, roles: ['requester', 'it_admin', 'sysadmin'] },
       { to: '/kanban', label: 'KANBAN', icon: <KanbanSquare className="w-4 h-4" />, roles: ['technician', 'it_admin', 'sysadmin'] },
       { to: '/reports', label: 'REPORTS', icon: <SlidersHorizontal className="w-4 h-4" />, roles: ['it_admin', 'sysadmin'] },
