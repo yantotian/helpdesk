@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { validatePassword } from "@/lib/utils";
 import { Eye, EyeOff, Terminal } from "lucide-react";
 
 type Mode = "login" | "register";
@@ -32,9 +33,12 @@ if (mode === "register" && !agreed) {
         toast.error("Please accept the User Agreement and Privacy Policy");
         return;
       }
-      if (mode === "register" && form.password.length < 6) {
-        toast.error("Password must be at least 6 characters");
-        return;
+      if (mode === "register") {
+        const pwdError = validatePassword(form.password);
+        if (pwdError) {
+          toast.error(pwdError);
+          return;
+        }
       }
       setLoading(true);
     try {

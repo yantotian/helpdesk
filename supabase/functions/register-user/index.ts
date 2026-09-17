@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     const username = rawUsername.toLowerCase();
 
-    // Validate password minimum length
+    // Validate password minimum length (keep in sync with PASSWORD_MIN_LENGTH in src/lib/utils.ts)
     if (password.length < 6) {
       return new Response(
         JSON.stringify({ error: "Password must be at least 6 characters" }),

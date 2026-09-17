@@ -6,7 +6,7 @@ import type { Profile, UserRole } from '@/types/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, isSysAdmin } from '@/lib/roles';
 import { Button } from '@/components/ui/button';
-import { formatUtc8DateStamp } from '@/lib/utils';
+import { formatUtc8DateStamp, PASSWORD_MIN_LENGTH, validatePassword } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,7 +35,7 @@ const EMPTY_EDIT: EditForm = { username: '', full_name: '', role: 'requester', o
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
   if (!pw) return { score: 0, label: '', color: '' };
   let score = 0;
-  if (pw.length >= 6) score++;
+  if (pw.length >= PASSWORD_MIN_LENGTH) score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
@@ -206,6 +206,10 @@ export default function UsersPage() {
       toast.error('You cannot change your own role.');
       return;
     }
+    if (editForm.password) {
+      const pwdErr = validatePassword(editForm.password);
+      if (pwdErr) { toast.error(pwdErr); return; }
+    }
     setSaving(editTarget.id);
     try {
       const patch: Record<string, unknown> = {
@@ -228,6 +232,8 @@ export default function UsersPage() {
   // ── Add new user ───────────────────────────────────────────────
   const handleAddSave = async () => {
     if (!addForm.username.trim() || !addForm.password) { toast.error('Username and password are required'); return; }
+    const pwdErr = validatePassword(addForm.password);
+    if (pwdErr) { toast.error(pwdErr); return; }
     if (addForm.password !== addForm.confirmPw) { toast.error('Passwords do not match'); return; }
     setSaving('new');
     try {
@@ -282,7 +288,7 @@ export default function UsersPage() {
     for (const row of rows) {
       const username = (row['username'] || '').trim().toLowerCase();
       const password = (row['password'] || '').trim();
-      if (!username || !password) { failed++; continue; }
+      if (!username || !password || validatePassword(password)) { failed++; continue; }
       try {
         const { data, error } = await supabase.functions.invoke('register-user', {
           body: {

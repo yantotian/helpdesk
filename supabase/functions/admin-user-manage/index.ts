@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
 
       // Update password if provided
       if (password) {
+        // Keep minimum in sync with PASSWORD_MIN_LENGTH in src/lib/utils.ts
         if (password.length < 6) return json({ error: "Password must be at least 6 characters" }, 400);
         const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password });
         if (error) return json({ error: error.message }, 400);
