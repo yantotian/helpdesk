@@ -18,7 +18,6 @@ const HEADER_H = 26;
 const CONTENT_TOP = HEADER_H + 4;
 const FOOTER_Y = PAGE_H - 8;
 
-const C_DARK: Rgb = [13, 13, 13];
 const C_ACCENT: Rgb = [255, 69, 0];
 const C_TEXT: Rgb = [17, 24, 39];
 const C_BODY: Rgb = [55, 65, 81];
@@ -63,26 +62,52 @@ const PRIORITY_COLORS: Record<TicketPriority, Rgb> = {
 const STATUS_ORDER: TicketStatus[] = ['new', 'assigned', 'in_progress', 'on_hold', 'resolved', 'verified', 'closed'];
 const PRIORITY_ORDER: TicketPriority[] = ['low', 'medium', 'high', 'critical'];
 
+let bayuganLogoDataUrl: string | null = null;
+
+async function loadBayuganLogo(): Promise<string | null> {
+  if (bayuganLogoDataUrl) return bayuganLogoDataUrl;
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}bayugan_logo.png`);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    bayuganLogoDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    return bayuganLogoDataUrl;
+  } catch {
+    return null;
+  }
+}
+
 /** Add the branded header block to the current page. */
 function addHeader(pdf: jsPDF, title: string, meta: string) {
-  pdf.setFillColor(C_DARK[0], C_DARK[1], C_DARK[2]);
+  pdf.setFillColor(255, 255, 255);
   pdf.rect(0, 0, PAGE_W, HEADER_H, 'F');
-  pdf.setDrawColor(C_ACCENT[0], C_ACCENT[1], C_ACCENT[2]);
+  pdf.setDrawColor(0, 0, 0);
   pdf.setLineWidth(0.6);
   pdf.line(0, HEADER_H, PAGE_W, HEADER_H);
 
+  if (bayuganLogoDataUrl) {
+    const logoH = 16;
+    const logoW = logoH * (2280 / 2273);
+    pdf.addImage(bayuganLogoDataUrl, 'PNG', MARGIN, (HEADER_H - logoH) / 2, logoW, logoH);
+  }
+
   pdf.setFont('courier', 'bold');
-  pdf.setTextColor(C_ACCENT[0], C_ACCENT[1], C_ACCENT[2]);
+  pdf.setTextColor(0, 0, 0);
   pdf.setFontSize(10);
   pdf.text('CITY INFORMATION OFFICE', PAGE_W / 2, 9, { align: 'center' });
   pdf.setFontSize(8);
   pdf.text('OPERATIONS DIVISION', PAGE_W / 2, 13.5, { align: 'center' });
 
   pdf.setFont('courier', 'normal');
-  pdf.setTextColor(156, 163, 175);
+  pdf.setTextColor(0, 0, 0);
   pdf.setFontSize(7);
   pdf.text(title, PAGE_W / 2, 18, { align: 'center' });
-  pdf.setTextColor(C_MUTED[0], C_MUTED[1], C_MUTED[2]);
+  pdf.setTextColor(0, 0, 0);
   pdf.text(meta, PAGE_W / 2, 22, { align: 'center' });
 }
 
@@ -367,6 +392,7 @@ export async function exportTicketToPdf(data: TicketPdfData): Promise<void> {
   const { ticket, activities, attachments } = data;
   const title = 'IT HELPDESK \u2014 TICKET REPORT';
   const meta = `EXPORTED ${formatUtc8DateStamp(new Date())} \u00B7 ${STATUS_LABELS[ticket.status]} \u00B7 ${PRIORITY_LABELS[ticket.priority]}`;
+  bayuganLogoDataUrl = await loadBayuganLogo();
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   addHeader(pdf, title, meta);
 
@@ -497,6 +523,7 @@ export async function exportReportsToPdf(data: ReportsPdfData): Promise<void> {
   const { tickets, idRequestCount, period } = data;
   const title = 'IT HELPDESK \u2014 REPORTS';
   const meta = `PERIOD: ${period ?? 'ALL TIME'} \u00B7 ${formatUtc8DateStamp(new Date())}`;
+  bayuganLogoDataUrl = await loadBayuganLogo();
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   addHeader(pdf, title, meta);
 
