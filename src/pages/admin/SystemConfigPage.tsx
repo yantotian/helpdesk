@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getSystemConfigs, updateSystemConfig } from '@/lib/api';
+import { api } from '@/lib/api-client';
 import type { SystemConfig } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,8 +25,8 @@ export default function SystemConfigPage() {
   useEffect(() => {
     reload();
     // Health check
-    fetch(`https://tzdwisdgsxlwbehdkslx.supabase.co/health`)
-      .then(r => setHealth(r.ok ? 'ok' : 'error'))
+    api.get('/health')
+      .then(() => setHealth('ok'))
       .catch(() => setHealth('error'));
   }, []);
 
@@ -112,10 +113,10 @@ export default function SystemConfigPage() {
         <div className="border border-border bg-card p-5">
           <div className="mono text-[10px] text-muted-foreground tracking-widest mb-3">API ENDPOINTS</div>
           <div className="space-y-1 mono text-[10px] text-muted-foreground">
-            <div><span className="text-primary">GET</span>  /health — Health check</div>
-            <div><span className="text-primary">POST</span> /functions/v1/register-user — User registration (JWT)</div>
-            <div><span className="text-primary">POST</span> /functions/v1/auto-assign — Auto-assign ticket</div>
-            <div><span className="text-primary">POST</span> /functions/v1/sla-checker — SLA breach check</div>
+            <div><span className="text-primary">GET</span>  /api/health — Health check</div>
+            <div><span className="text-primary">POST</span> /api/auth/register — User registration (JWT)</div>
+            <div><span className="text-primary">POST</span> /api/auth/login — User login</div>
+            <div><span className="text-primary">GET</span>  /api/dashboard-stats — Dashboard statistics</div>
             <div className="pt-2 border-t border-border">
               <span className="text-yellow-400">Rate Limit:</span> Configurable via rate_limit_per_minute setting
             </div>

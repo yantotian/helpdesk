@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layouts/MainLayout';
 import { createTicket, getCategories, uploadAttachment, getTicketTemplates } from '@/lib/api';
-import { supabase } from '@/db/supabase';
 import type { Category, TicketPriority, TicketTemplate } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,21 +79,10 @@ export default function CreateTicketPage() {
         remarks: form.remarks || undefined,
       } as any);
 
-      // Log creation activity
-      await supabase.from('ticket_activities').insert({
-        ticket_id: ticketId,
-        actor_id: profile.id,
-        activity_type: 'system',
-        content: 'Ticket created',
-      });
-
       // Upload attachments
       for (const file of files) {
         await uploadAttachment(ticketId, profile.id, file);
       }
-
-      // Trigger auto-assign
-      await supabase.functions.invoke('auto-assign', { body: { ticket_id: ticketId }, method: 'POST' });
 
       toast.success('Ticket created successfully');
       navigate(`/tickets/${ticketId}`);

@@ -1,32 +1,24 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import svgr from "vite-plugin-svgr";
-import path from "path";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import svgr from 'vite-plugin-svgr'
+import path from 'path'
 
 export default defineConfig({
-  base: "./",
-  plugins: [
-    react(),
-    svgr({
-      svgrOptions: {
-        icon: true,
-        exportType: "named",
-        namedExport: "ReactComponent",
-      },
-    }),
-  ],
+  plugins: [react(), svgr()],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-  optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "react-dom/client",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
-    ],
+  base: './',
+  server: {
+    // Uploads are NOT proxied from /uploads: they are only reachable through
+    // /api/files/<signed-token>, which the Express API authorizes.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
-});
+})

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layouts/MainLayout';
 import { updateProfile } from '@/lib/api';
-import { supabase } from '@/db/supabase';
+import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,18 +54,10 @@ export default function ProfilePage() {
     }
     setSavingPwd(true);
     try {
-      // Re-authenticate first
-      const email = `${profile?.username}@ciodesk.com`;
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password: pwd.current,
+      await api.post('/auth/change-password', {
+        current_password: pwd.current,
+        new_password: pwd.next,
       });
-      if (signInErr) {
-        toast.error('Current password is incorrect');
-        return;
-      }
-      const { error: updateErr } = await supabase.auth.updateUser({ password: pwd.next });
-      if (updateErr) throw updateErr;
       setPwd({ current: '', next: '', confirm: '' });
       toast.success('Password changed successfully');
     } catch (err: any) {

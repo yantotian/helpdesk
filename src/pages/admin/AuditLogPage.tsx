@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
-import { supabase } from '@/db/supabase';
+import { api } from '@/lib/api-client';
 import type { AuditLog } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,7 @@ export default function AuditLogPage() {
   const reload = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('audit_log')
-        .select('*, actor:profiles!audit_log_actor_id_fkey(username, full_name)')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      if (error) throw error;
+      const data = await api.get<any[]>('/audit-log');
       setLogs(Array.isArray(data) ? data : []);
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);

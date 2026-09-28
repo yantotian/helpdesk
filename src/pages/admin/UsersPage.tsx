@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import { getAllProfiles, toggleProfileActive } from '@/lib/api';
-import { supabase } from '@/db/supabase';
+import { api } from '@/lib/api-client';
 import type { Profile, UserRole } from '@/types/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS, isSysAdmin } from '@/lib/roles';
@@ -63,14 +63,9 @@ function PasswordStrengthBar({ password }: { password: string }) {
   );
 }
 
-// ── Edge function helper ────────────────────────────────────────────────────
+// ── API helper ──────────────────────────────────────────────────────────────
 async function callManage(body: Record<string, unknown>) {
-  const { data, error } = await supabase.functions.invoke('admin-user-manage', { body });
-  if (error) {
-    const msg = await error?.context?.text().catch(() => null);
-    try { const parsed = JSON.parse(msg ?? ''); throw new Error(parsed.error ?? msg); } catch { throw new Error(msg ?? error.message); }
-  }
-  return data;
+  return api.post('/profiles', body);
 }
 
 // ── CSV helpers ─────────────────────────────────────────────────────────────
@@ -184,7 +179,7 @@ export default function UsersPage() {
     }
     setSaving(user.id);
     try {
-      await callManage({ action: 'update', user_id: user.id, role: nextRole });
+      await api.put(`/profiles/${user.id}/role`, { role: nextRole });
       setProfiles(p => p.map(u => u.id === user.id ? { ...u, role: nextRole } : u));
       toast.success(`Role updated to ${ROLE_LABELS[nextRole]}`);
     } catch (e: any) { toast.error(e.message); }
@@ -212,16 +207,17 @@ export default function UsersPage() {
     }
     setSaving(editTarget.id);
     try {
-      const patch: Record<string, unknown> = {
-        action: 'update', user_id: editTarget.id,
-        username: editForm.username.trim().toLowerCase() || undefined,
-        full_name: editForm.full_name.trim() || undefined,
-        role: editForm.role,
-        office: editForm.office.trim() || undefined,
-        contact: editForm.contact.trim() || undefined,
-      };
-      if (editForm.password) patch.password = editForm.password;
-      await callManage(patch);
+      await api.put(`/profiles/${editTarget.id}`, {
+        full_name: editForm.full_name.trim() || null,
+        office: editForm.office.trim() || null,
+        contact: editForm.contact.trim() || null,
+      });
+      if (editForm.role !== editTarget.role) {
+        await api.put(`/profiles/${editTarget.id}/role`, { role: editForm.role });
+      }
+      if (editForm.password) {
+        await api.put(`/profiles/${editTarget.id}/password`, { password: editForm.password });
+      }
       toast.success('User updated');
       setEditOpen(false);
       reload();
@@ -238,21 +234,14 @@ export default function UsersPage() {
     setSaving('new');
     try {
       const username = addForm.username.trim().toLowerCase();
-      const { data, error } = await supabase.functions.invoke('register-user', {
-        body: {
-          username,
-          password: addForm.password,
-          full_name: addForm.full_name.trim() || username,
-          role: addForm.role,
-          office: addForm.office.trim() || undefined,
-          contact: addForm.contact.trim() || undefined,
-        },
+      await api.post('/profiles', {
+        username,
+        password: addForm.password,
+        full_name: addForm.full_name.trim() || username,
+        role: addForm.role,
+        office: addForm.office.trim() || undefined,
+        contact: addForm.contact.trim() || undefined,
       });
-      if (error) {
-        const msg = await error?.context?.text().catch(() => null);
-        try { const parsed = JSON.parse(msg ?? ''); throw new Error(parsed.error ?? msg); } catch { throw new Error(msg ?? error.message); }
-      }
-      if (data?.error) throw new Error(data.error);
       toast.success('User created');
       setAddOpen(false);
       setAddForm({ ...EMPTY_EDIT, confirmPw: '' });
@@ -266,7 +255,7 @@ export default function UsersPage() {
     if (!deleteTarget) return;
     setSaving(deleteTarget.id);
     try {
-      await callManage({ action: 'delete', user_id: deleteTarget.id });
+      await api.delete(`/profiles/${deleteTarget.id}`);
       toast.success('User deleted');
       setDeleteTarget(null);
       reload();
@@ -290,17 +279,15 @@ export default function UsersPage() {
       const password = (row['password'] || '').trim();
       if (!username || !password || validatePassword(password)) { failed++; continue; }
       try {
-        const { data, error } = await supabase.functions.invoke('register-user', {
-          body: {
-            username,
-            password,
-            full_name: row['full_name'] || username,
-            role: ROLES.includes(row['role'] as UserRole) ? row['role'] : 'requester',
-            office: row['office'] || undefined,
-            contact: row['contact'] || undefined,
-          },
+        await api.post('/profiles', {
+          username,
+          password,
+          full_name: row['full_name'] || username,
+          role: ROLES.includes(row['role'] as UserRole) ? row['role'] : 'requester',
+          office: row['office'] || undefined,
+          contact: row['contact'] || undefined,
         });
-        if (error || data?.error) { failed++; } else { success++; }
+        success++;
       } catch { failed++; }
     }
     setCsvImporting(false);
