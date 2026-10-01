@@ -3,6 +3,15 @@ import { twMerge } from "tailwind-merge"
 
 export const APP_TIME_ZONE_OFFSET_MS = 8 * 60 * 60 * 1000;
 
+export const PASSWORD_MIN_LENGTH = 6;
+
+export function validatePassword(pw: string): string | null {
+  if (!pw) return "Password is required";
+  if (pw.length < PASSWORD_MIN_LENGTH)
+    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+  return null;
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

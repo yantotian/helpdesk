@@ -7,7 +7,6 @@ import {
   getTicket, getActivities, getAttachments, addComment,
   updateTicketStatus, assignTicket, getProfiles, updateTicket, uploadAttachment, deleteTicket, getSignedStorageUrl
 } from '@/lib/api';
-import { supabase } from '@/db/supabase';
 import { exportTicketToPdf } from '@/lib/pdfExport';
 import type { Ticket, TicketActivity, TicketAttachment, TicketStatus, Profile } from '@/types/types';
 import { Button } from '@/components/ui/button';

@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layouts/MainLayout';
 import { updateProfile } from '@/lib/api';
-import { supabase } from '@/db/supabase';
+import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { PASSWORD_MIN_LENGTH } from '@/lib/utils';
 import { User, Lock, Save, KeyRound } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -43,8 +44,8 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pwd.next || pwd.next.length < 6) {
-      toast.error('New password must be at least 6 characters');
+    if (!pwd.next || pwd.next.length < PASSWORD_MIN_LENGTH) {
+      toast.error(`New password must be at least ${PASSWORD_MIN_LENGTH} characters`);
       return;
     }
     if (pwd.next !== pwd.confirm) {
@@ -53,18 +54,10 @@ export default function ProfilePage() {
     }
     setSavingPwd(true);
     try {
-      // Re-authenticate first
-      const email = `${profile?.username}@ciodesk.com`;
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password: pwd.current,
+      await api.post('/auth/change-password', {
+        current_password: pwd.current,
+        new_password: pwd.next,
       });
-      if (signInErr) {
-        toast.error('Current password is incorrect');
-        return;
-      }
-      const { error: updateErr } = await supabase.auth.updateUser({ password: pwd.next });
-      if (updateErr) throw updateErr;
       setPwd({ current: '', next: '', confirm: '' });
       toast.success('Password changed successfully');
     } catch (err: any) {
