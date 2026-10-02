@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { supabase } from '@/db/supabase';
 import type { User } from '@supabase/supabase-js';
 import type { Profile, UserRole } from '@/types/types';
+import { describeAuthError } from '@/lib/errors';
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      return { error: new Error(describeAuthError(error)) };
     }
   };
 
@@ -95,8 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
       });
       if (error) {
-        const msg = await error?.context?.text?.();
-        throw new Error(msg || error.message);
+        let detail = '';
+        try {
+          detail = (await error.context?.text?.()) ?? '';
+        } catch {
+          detail = '';
+        }
+        throw new Error(detail || error.message);
       }
       if (data?.error) throw new Error(data.error);
       const email = `${payload.username.toLowerCase()}@ciodesk.com`;
@@ -107,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (signInError) throw signInError;
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      return { error: new Error(describeAuthError(error)) };
     }
   };
 
