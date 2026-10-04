@@ -227,9 +227,10 @@ if (mode === "register" && !agreed) {
                 <>
                   <div className="space-y-1">
                     <Label className="mono text-xs text-muted-foreground">
-                      OFFICE (optional)
+                      OFFICE
                     </Label>
                     <Input
+                      required
                       value={form.office}
                       onChange={(e) => set("office", e.target.value)}
                       placeholder="e.g. City Information Office"
